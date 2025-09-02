@@ -46,17 +46,26 @@ internal sealed partial class TemplateRenderer
         // intentionally does NOT flip "you" → "I" (or "you're" → "I'm") inside captures.
         // This preserves template phrasing like "You say $1?" → "You say you feel sad?"
         // while still allowing useful possessive flips like "your" → "my".
-        IReadOnlyDictionary<string, string>? capturePostMap = null;
+        Dictionary<string, string>? capturePostMap = null;
         if (applyPost && postMap is not null && postMap.Count > 0)
         {
             var filtered = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in postMap)
+            foreach (KeyValuePair<string, string> kv in postMap)
             {
-                var k = kv.Key;
-                if (string.Equals(k, "you", StringComparison.OrdinalIgnoreCase)) continue;
-                if (string.Equals(k, "you're", StringComparison.OrdinalIgnoreCase)) continue;
+                string k = kv.Key;
+                if (string.Equals(k, "you", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (string.Equals(k, "you're", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 filtered[k] = kv.Value;
             }
+
             capturePostMap = filtered;
         }
 
@@ -69,17 +78,21 @@ internal sealed partial class TemplateRenderer
             seg = NormalizeWhitespace(seg);
 
             if (capturePostMap is not null && capturePostMap.Count > 0)
+            {
                 seg = ApplyWordMap(seg, capturePostMap);
+            }
 
+            seg = seg.ToLowerInvariant();
             processedCaptures.Add(seg);
         }
 
         // 2) Expand $n placeholders with processed captures.
         string expanded = CaptureRegex().Replace(template, m =>
         {
-            if (!int.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.None,
-                              System.Globalization.CultureInfo.InvariantCulture, out int idx))
+            if (!int.TryParse(m.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int idx))
+            {
                 return m.Value;
+            }
 
             return (idx >= 1 && idx < processedCaptures.Count) ? processedCaptures[idx] : string.Empty;
         });
@@ -90,10 +103,14 @@ internal sealed partial class TemplateRenderer
 
         // 4) Presentation passes.
         if (sentenceCase)
+        {
             expanded = ApplySentenceCase(expanded);
+        }
 
         if (ensureTerminalPunctuation && !HasTerminalPunctuation(expanded))
+        {
             expanded = expanded.TrimEnd() + ".";
+        }
 
         return expanded;
     }
@@ -139,7 +156,7 @@ internal sealed partial class TemplateRenderer
     /// <param name="text">The input text.</param>
     /// <param name="map">The substitution map.</param>
     /// <returns>The mapped text.</returns>
-    private static string ApplyWordMap(string text, IReadOnlyDictionary<string, string> map)
+    private static string ApplyWordMap(string text, Dictionary<string, string> map)
     {
         return WordRegex().Replace(text, m =>
         {

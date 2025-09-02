@@ -4,6 +4,7 @@
 using Genova.Common.Attributes;
 using Genova.Eliza.Enums;
 using Genova.Eliza.Models;
+using Microsoft.AspNetCore.Components.RenderTree;
 
 namespace Genova.Eliza;
 
@@ -221,8 +222,8 @@ public sealed class ElizaEngine
 
                             case DirectiveAction.Prelink:
                             {
-                                if (string.IsNullOrWhiteSpace(outcome.LinkTarget)
-                                    || !TryGetKeyword(outcome.LinkTarget!, out Keyword? prelinkKw))
+                                if (string.IsNullOrWhiteSpace(outcome.LinkTarget) ||
+                                    !TryGetKeyword(outcome.LinkTarget!, out Keyword? prelinkKw))
                                 {
                                     if (TryEmitMemory(out string? mem4))
                                     {
@@ -232,9 +233,11 @@ public sealed class ElizaEngine
                                     return EmitNone();
                                 }
 
-                                // Treat the transformed input as fresh input for the target keyword
-                                List<string> tkn = _tokenizer.Tokenize(outcome.TransformedInput ?? string.Empty);
-                                workingTokens = _subs.ProcessInputTokens(tkn);
+                                // Tokenize the transformed input; DO NOT apply pre-substitutions here.
+                                List<string> tkns = _tokenizer.Tokenize(outcome.TransformedInput ?? string.Empty);
+
+                                workingTokens = tkns;
+
                                 current = prelinkKw;
                                 if (++linkDepth > MaxLinkDepth)
                                 {
@@ -324,14 +327,15 @@ public sealed class ElizaEngine
     private bool TryEmitMemory(out string text)
     {
         text = string.Empty;
+
         if (_memory.TryDequeue(_turnIndex - 1, out string? queued) && !string.IsNullOrWhiteSpace(queued))
         {
-            // Apply post substitutions & presentation options to memory text.
+            // IMPORTANT: Do NOT run post-substitutions on memory text.
             string rendered = TemplateRenderer.Render(
                 queued!,
                 captures: new List<string> { string.Empty },   // 1-based list with no captures
-                postMap: _subs.PostMap,
-                applyPost: true,
+                postMap: null,                                  // <-- no post map
+                applyPost: false,                               // <-- do not apply post
                 sentenceCase: SentenceCase,
                 ensureTerminalPunctuation: EnsureTerminalPunctuation);
 

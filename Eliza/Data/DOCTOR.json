@@ -29,22 +29,14 @@
             "me": "you",
             "my": "your",
             "am": "are",
-            "you": "i",
-            "your": "my",
-            "yours": "mine",
-            "myself": "yourself",
-            "yourself": "myself"
+            "myself": "yourself"
         },
         "post": {
             "you": "i",
             "your": "my",
             "yours": "mine",
             "yourself": "myself",
-            "i": "you",
-            "me": "you",
-            "my": "your",
-            "am": "are",
-            "myself": "yourself"
+            "are": "am"
         }
     },
 
@@ -222,15 +214,6 @@
                     ]
                 },
                 {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "You say $1?",
-                        "Can you elaborate on that?",
-                        "Do you say $1 for some special reason?",
-                        "That's quite interesting."
-                    ]
-                },
-                {
                     "pattern": [
                         { "wildcard": true },
                         "I",
@@ -285,6 +268,15 @@
                         "Oh, I $3.",
                         "You're not really talking about me—are you?",
                         "What are your feelings now?"
+                    ]
+                },
+                {
+                    "pattern": [ { "wildcard": true } ],
+                    "reassemblies": [
+                        "You say $1?",
+                        "Can you elaborate on that?",
+                        "Do you say $1 for some special reason?",
+                        "That's quite interesting."
                     ]
                 }
             ]
