@@ -74,15 +74,13 @@ internal sealed partial class TemplateRenderer
         for (int i = 1; i < captures.Count; i++)
         {
             string seg = captures[i] ?? string.Empty;
-            seg = SpaceFixRegex().Replace(seg, "$1");
-            seg = NormalizeWhitespace(seg);
 
             if (capturePostMap is not null && capturePostMap.Count > 0)
             {
                 seg = ApplyWordMap(seg, capturePostMap);
             }
 
-            seg = seg.ToLowerInvariant();
+            seg = NormalizeEchoCapture(seg);
             processedCaptures.Add(seg);
         }
 
@@ -288,6 +286,25 @@ internal sealed partial class TemplateRenderer
         return false;
     }
 
+    private static string NormalizeEchoCapture(string seg)
+    {
+        // normalize spacing first
+        seg = SpaceFixRegex().Replace(seg, "$1");
+        seg = NormalizeWhitespace(seg);
+
+        // lower-case the whole capture for natural echoing
+        seg = seg.ToLowerInvariant();
+
+        // restore first-person pronoun capitalization: i / i'm / i'd / i've / i'll
+        seg = LowercaseIForms().Replace(seg, m =>
+        {
+            string suffix = m.Groups[1].Value; // includes "'m", "'d", "'ve", "'ll", or empty
+            return "I" + suffix;
+        });
+
+        return seg;
+    }
+
     [GeneratedRegex(@"\$(\d+)", RegexOptions.Compiled)]
     private static partial Regex CaptureRegex();
 
@@ -296,4 +313,7 @@ internal sealed partial class TemplateRenderer
 
     [GeneratedRegex(@"\s+([,.;:!?])", RegexOptions.Compiled)]
     private static partial Regex SpaceFixRegex();
+
+    [GeneratedRegex(@"(?<=^|\W)i((?:['\u2019](?:m|d|ve|ll))?)(?=\W|$)", RegexOptions.Compiled)]
+    private static partial Regex LowercaseIForms();
 }

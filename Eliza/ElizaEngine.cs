@@ -148,11 +148,22 @@ public sealed class ElizaEngine
 
             // Try decompositions in order
             bool matchedAnyDecomp = false;
+            bool restart = false;
+
             if (current.Decompositions != null)
             {
-                for (int di = 0; di < current.Decompositions!.Count; di++)
+                List<Decomposition> decomps = current.Decompositions;
+                int decompCount = decomps.Count;
+
+                for (int di = 0; di < decompCount; di++)
                 {
-                    Decomposition decomp = current.Decompositions[di];
+                    if (current.Decompositions == null)
+                    {
+                        break;
+                    }
+
+                    Decomposition decomp = decomps[di];
+
                     if (_matcher.TryMatch(workingTokens, decomp, out List<string>? captures))
                     {
                         matchedAnyDecomp = true;
@@ -190,6 +201,7 @@ public sealed class ElizaEngine
 
                                 // Reset working tokens to original preTokens when leaving link/jump path
                                 workingTokens = preTokens;
+                                restart = true;
                                 continue;
                             }
 
@@ -207,6 +219,7 @@ public sealed class ElizaEngine
                                 }
 
                                 current = linkKw;
+
                                 if (++linkDepth > MaxLinkDepth)
                                 {
                                     if (TryEmitMemory(out string? mem3))
@@ -217,6 +230,7 @@ public sealed class ElizaEngine
                                     return EmitNone();
                                 }
 
+                                restart = true;
                                 continue;
                             }
 
@@ -239,6 +253,7 @@ public sealed class ElizaEngine
                                 workingTokens = tkns;
 
                                 current = prelinkKw;
+
                                 if (++linkDepth > MaxLinkDepth)
                                 {
                                     if (TryEmitMemory(out string? mem5))
@@ -249,6 +264,7 @@ public sealed class ElizaEngine
                                     return EmitNone();
                                 }
 
+                                restart = true;
                                 continue;
                             }
 
@@ -257,6 +273,11 @@ public sealed class ElizaEngine
                                 // Unknown/None directive—fall through to try next decomposition
                                 break;
                             }
+                        }
+
+                        if (restart)
+                        {
+                            break;
                         }
                     }
                 }

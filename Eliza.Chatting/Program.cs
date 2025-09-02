@@ -1,0 +1,125 @@
+﻿// This file is part of the Genova project licensed under the GNU General Public License v3.0.
+// See the LICENSE file in the project root for more information.
+
+using System.Diagnostics.CodeAnalysis;
+using Genova.Generation;
+using Genova.Generation.Gateways;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Genova.Eliza.Chatting;
+
+/// <summary>
+/// The entry point for the Eliza Chatting application.
+/// </summary>
+[ExcludeFromCodeCoverage(Justification = "Only used rarely when testing Eliza.")]
+internal class Program
+{
+    /// <summary>
+    /// The main entry point for the Eliza Chatting application.
+    /// </summary>
+    /// <param name="args">The command-line arguments passed to the application.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Convention of the Main method.")]
+    static async Task Main(string[] args)
+    {
+        IConfiguration configuration = BuildConfiguration();
+
+        string? directory = configuration.GetValue<string>("OutputDirectory")!;
+        if (string.IsNullOrEmpty(directory))
+        {
+            throw new InvalidOperationException("Output directory is not set in the configuration.");
+        }
+
+        if (!Directory.Exists(directory))
+        {
+            throw new InvalidOperationException("Output directory does not exist.");
+        }
+
+        string fullPath = Path.Combine(directory, "eliza.txt");
+
+        ServiceProvider serviceProvider = BuildServiceProvider(configuration);
+        IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        GenerationOptions generationOptions = new()
+        {
+            OpenAiApiKey = GetApiKey(),
+        };
+        OpenAiApiGateway openAiApiGateway = new (generationOptions, httpClientFactory);
+
+        ElizaEngine eliza = new();
+        string greeting = eliza.Greeting;
+        if (string.IsNullOrEmpty(greeting))
+        {
+            greeting = "What would you like to chat about?";
+        }
+
+        Woody woody = new(configuration, openAiApiGateway);
+
+        int turns = 12; // Set desired number of turns
+        await StartChat(eliza, woody, turns, fullPath);
+    }
+
+    private static async Task StartChat(ElizaEngine eliza, Woody woody, int turns, string fullPath)
+    {
+        var transcript = new List<string>();
+
+        string elizaReply = eliza.Greeting;
+        if (string.IsNullOrEmpty(elizaReply))
+        {
+            elizaReply = "What would you like to chat about?";
+        }
+
+        string elizaLine = $"ELIZA: {elizaReply}";
+        transcript.Add(elizaLine);
+        Console.WriteLine(elizaLine);
+
+        for (int i = 0; i < turns; i++)
+        {
+            // Woody replies to Eliza, using the full transcript
+            string woodyReply = await woody.Reply(transcript);
+            string woodyLine = $"WOODY: {woodyReply}";
+            transcript.Add(woodyLine);
+            Console.WriteLine(woodyLine);
+
+            // Eliza replies to Woody, using only Woody's last reply
+            elizaReply = eliza.Reply(woodyReply);
+            elizaLine = $"ELIZA: {elizaReply}";
+            transcript.Add(elizaLine);
+            Console.WriteLine(elizaLine);
+        }
+
+        // Write the entire transcript to the file once, after the conversation
+        File.WriteAllLines(fullPath, transcript);
+    }
+
+    private static IConfiguration BuildConfiguration()
+    {
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .Build();
+    }
+
+    private static ServiceProvider BuildServiceProvider(IConfiguration configuration)
+    {
+        ServiceCollection serviceCollection = new();
+        ConfigureServices(serviceCollection, configuration);
+        return serviceCollection.BuildServiceProvider();
+    }
+
+    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton(configuration);
+        services.AddHttpClient();
+    }
+
+    private static string GetApiKey()
+    {
+        string? apiKey = Environment.GetEnvironmentVariable("OPENAI_A11YGEN_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            throw new InvalidOperationException("API key is not set in the environment variables.");
+        }
+        return apiKey;
+    }
+}

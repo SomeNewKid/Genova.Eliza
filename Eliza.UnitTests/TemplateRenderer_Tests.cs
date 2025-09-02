@@ -40,7 +40,7 @@ public class TemplateRenderer_Tests
         string template = "You said: $1.";
         IReadOnlyList<string> captures = new List<string> { "", "I am sad" };
         string result = TemplateRenderer.Render(template, captures);
-        result.Should().Be("You said: i am sad.");
+        result.Should().Be("You said: I am sad.");
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class TemplateRenderer_Tests
         string template = "$1 and $2.";
         IReadOnlyList<string> captures = new List<string> { "", "I am sad", "I am tired" };
         string result = TemplateRenderer.Render(template, captures);
-        result.Should().Be("i am sad and i am tired.");
+        result.Should().Be("I am sad and I am tired.");
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class TemplateRenderer_Tests
         string template = "you said $1.";
         IReadOnlyList<string> captures = new List<string> { "", "i am sad" };
         string result = TemplateRenderer.Render(template, captures, sentenceCase: true);
-        result.Should().Be("You said i am sad.");
+        result.Should().Be("You said I am sad.");
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class TemplateRenderer_Tests
         string template = "You said $1";
         IReadOnlyList<string> captures = new List<string> { "", "I am sad" };
         string result = TemplateRenderer.Render(template, captures, ensureTerminalPunctuation: true);
-        result.Should().Be("You said i am sad.");
+        result.Should().Be("You said I am sad.");
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public class TemplateRenderer_Tests
         string template = "You said $1!";
         IReadOnlyList<string> captures = new List<string> { "", "I am sad" };
         string result = TemplateRenderer.Render(template, captures, ensureTerminalPunctuation: true);
-        result.Should().Be("You said i am sad!");
+        result.Should().Be("You said I am sad!");
     }
 
     [Fact]
