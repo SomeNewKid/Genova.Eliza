@@ -1,885 +1,1193 @@
 {
-    "greeting": "How do you do. Please tell me your problem.",
-
-    "substitutions": {
-        "simple": {
-            "dont": "don't",
-            "cant": "can't",
-            "wont": "won't",
-            "recollect": "remember",
-            "dreamed": "dreamt",
-            "maybe": "perhaps",
-            "certainly": "yes",
-            "machine": "computer",
-            "machines": "computer",
-            "computers": "computer",
-            "were": "was",
-            "you're": "i'm",
-            "im": "i am",
-            "am": "are",
-            "your": "my",
-            "me": "you",
-            "myself": "yourself",
-            "yourself": "myself",
-            "i": "you",
-            "you": "i"
-        },
-        "pre": {
-            "i": "you",
-            "me": "you",
-            "my": "your",
-            "am": "are",
-            "myself": "yourself"
-        },
-        "post": {
-            "you": "i",
-            "your": "my",
-            "yours": "mine",
-            "yourself": "myself",
-            "are": "am"
-        }
-    },
-
-    "lexicon": {
-        "feel": { "tags": [ "BELIEF" ] },
-        "think": { "tags": [ "BELIEF" ] },
-        "believe": { "tags": [ "BELIEF" ] },
-        "wish": { "tags": [ "BELIEF" ] },
-
-        "mother": { "tags": [ "NOUN", "FAMILY" ] },
-        "father": { "tags": [ "NOUN", "FAMILY" ] },
-        "sister": { "tags": [ "NOUN", "FAMILY" ] },
-        "brother": { "tags": [ "NOUN", "FAMILY" ] },
-        "wife": { "tags": [ "NOUN", "FAMILY" ] },
-        "children": { "tags": [ "NOUN", "FAMILY" ] },
-
-        "mom": {
-            "substitution": "mother",
-            "tags": [ "FAMILY" ]
-        },
-        "dad": {
-            "substitution": "father",
-            "tags": [ "FAMILY" ]
-        },
-        "mama": {
-            "substitution": "mother",
-            "tags": [ "FAMILY" ]
-        },
-        "papa": {
-            "substitution": "father",
-            "tags": [ "FAMILY" ]
-        }
-    },
-
-    "keywords": [
-        {
-            "key": "HELLO",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "How do you do. Please tell me your problem."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "WHAT",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Why do you ask?",
-                        "Does that question interest you?",
-                        "What is it you really want to know?",
-                        "Are such questions much on your mind?",
-                        "What answer would please you most?",
-                        "What do you think?",
-                        "What comes to your mind when you ask that?",
-                        "Have you asked such questions before?",
-                        "Have you asked anyone else?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "PERHAPS",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "You don't seem quite certain.",
-                        "Why the uncertain tone?",
-                        "Can't you be more positive?",
-                        "You aren't sure.",
-                        "Don't you know?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "MAYBE",
-            "link": "PERHAPS"
-        },
-        {
-            "key": "NAME",
-            "rank": 15,
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "I am not interested in names.",
-                        "I've told you before, I don't care about names — please continue."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "DIT",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "In what way?",
-                        "What resemblance do you see?",
-                        "What does that similarity suggest to you?",
-                        "What other connections do you see?",
-                        "What do you suppose that resemblance means?",
-                        "What is the connection, do you suppose?",
-                        "Could there really be some connection?",
-                        "How?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "YOU",
-            "substitution": "I",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        { "alts": [ "CAN'T", "CANNOT" ] },
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "How do you know you can't $4?",
-                        "Have you tried?",
-                        "Perhaps you could $4 now.",
-                        "Do you really want to be able to $4?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        "DON'T",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Don't you really $4?",
-                        "Why don't you $4?",
-                        "Do you wish to be able to $4?",
-                        "Does that trouble you?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        "FEEL",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Tell me more about such feelings.",
-                        "Do you often feel $4?",
-                        "Do you enjoy feeling $4?",
-                        "Of what does feeling $4 remind you?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        { "wildcard": true },
-                        "I",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Perhaps in your fantasy we $3 each other.",
-                        "Do you wish to $3 me?",
-                        "You seem to need to $3 me.",
-                        "Do you $3 anyone else?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "I",
-                        "REMIND",
-                        "YOU",
-                        "OF",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        { "link": "DIT" }
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "I",
-                        "ARE",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "What makes you think I am $4?",
-                        "Does it please you to believe I am $4?",
-                        "Do you sometimes wish you were $4?",
-                        "Perhaps you would like to be $4."
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "I",
-                        { "wildcard": true },
-                        "YOU"
-                    ],
-                    "reassemblies": [
-                        "Why do you think I $3 you?",
-                        "You like to think I $3 you—don't you?",
-                        "What makes you think I $3 you?",
-                        "Really, I $3 you.",
-                        "Do you wish to believe I $3 you?",
-                        "Suppose I did $3 you—what would that mean?",
-                        "Does someone else believe I $3 you?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "I",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "We were discussing you—not me.",
-                        "Oh, I $3.",
-                        "You're not really talking about me—are you?",
-                        "What are your feelings now?"
-                    ]
-                },
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "You say $1?",
-                        "Can you elaborate on that?",
-                        "Do you say $1 for some special reason?",
-                        "That's quite interesting."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "YOU'RE",
-            "substitution": "I'M",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "I'M",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        {
-                            "prelink": {
-                                "template": "I are $3",
-                                "link": "YOU"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "I",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Perhaps in your fantasy we $3 each other.",
-                        "Do you wish to $3 me?",
-                        "You seem to need to $3 me.",
-                        "Do you $3 anyone else?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "FEEL",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Tell me more about such feelings.",
-                        "Do you often feel $3?",
-                        "Do you enjoy feeling $3?",
-                        "Of what does feeling $3 remind you?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "You say $1?",
-                        "Can you elaborate on that?",
-                        "Do you say $1 for some special reason?",
-                        "That's quite interesting."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "I'M",
-            "substitution": "YOU'RE",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU'RE",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        {
-                            "prelink": {
-                                "template": "You are $3",
-                                "link": "I"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "MY",
-            "substitution": "YOUR",
-            "rank": 2,
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOUR",
-                        { "tag": "FAMILY" },
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Tell me more about your family.",
-                        "Who else in your family $5?",
-                        { "link": "WHAT" },
-                        "What else comes to mind when you think of your $4?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOUR",
-                        { "alts": [ "SAD", "UNHAPPY", "DEPRESSED", "SICK" ] },
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Can you explain what made you $5?"
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        { "newkey": true }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "YOUR",
-            "substitution": "MY",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "MY",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Why are you concerned over my $3?",
-                        "What about your own $3?",
-                        "Are you worried about someone else's $3?",
-                        "Really, my $3."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "WAS",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "WAS",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "What if you were $3?",
-                        "Do you think you were $3?",
-                        "Were you $3?",
-                        "What would it mean if you were $3?",
-                        "What does ' $2 ' suggest to you?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "AM",
-            "substitution": "ARE",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "ARE",
-                        "YOU",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Do you believe you are $4?",
-                        "Would you want to be $4?",
-                        "You wish I would tell you you are $4.",
-                        "What would it mean if you were $4?",
-                        { "link": "WHAT" }
-                    ]
-                },
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Why do you say 'am'?",
-                        "I don't understand that."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "ARE",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "ARE",
-                        "I",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Why are you interested in whether I am $4 or not?",
-                        "Would you prefer if I weren't $4?",
-                        "Perhaps I am $4 in your fantasies.",
-                        "Do you sometimes think I am $4?",
-                        { "link": "WHAT" }
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "ARE",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Did you think they might not be $3?",
-                        "Would you like it if they were not $3?",
-                        "What if they were not $3?",
-                        "Possibly they are $3."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "YES",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "You seem quite positive.",
-                        "You are sure.",
-                        "I see.",
-                        "I understand."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "NO",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Are you saying 'no' just to be negative?",
-                        "You are being a bit negative.",
-                        "Why not?",
-                        "Why 'no'?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "WHY",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "WHY",
-                        "DON'T",
-                        "I",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Do you believe I don't $5?",
-                        "Perhaps I will $5 in good time.",
-                        "Should you $5 yourself?",
-                        "You want me to $5?",
-                        { "link": "WHAT" }
-                    ]
-                },
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "WHY",
-                        "CAN'T",
-                        "YOU",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Do you think you should be able to $5?",
-                        "Do you want to be able to $5?",
-                        "Do you believe this will help you to $5?",
-                        "Have you any idea why you can't $5?",
-                        { "link": "WHAT" }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "BECAUSE",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Is that the real reason?",
-                        "Don't any other reasons come to mind?",
-                        "Does that reason seem to explain anything else?",
-                        "What other reasons might there be?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "IF",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "IF",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Do you think it's likely that $3?",
-                        "Do you wish that $3?",
-                        "What do you think about $3?",
-                        "Really—if $3?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "COMPUTER",
-            "rank": 50,
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Do computers worry you?",
-                        "Why do you mention computers?",
-                        "What do you think machines have to do with your problem?",
-                        "Don't you think computers can help people?",
-                        "What about machines worries you?",
-                        "What do you think about machines?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "MACHINE",
-            "rank": 50,
-            "link": "COMPUTER"
-        },
-        {
-            "key": "MACHINES",
-            "rank": 50,
-            "link": "COMPUTER"
-        },
-        {
-            "key": "COMPUTERS",
-            "rank": 50,
-            "link": "COMPUTER"
-        },
-        {
-            "key": "REMEMBER",
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "REMEMBER",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Do you often think of $3?",
-                        "Does thinking of $3 bring anything else to mind?",
-                        "What else do you remember?",
-                        "Why do you recall $3 just now?",
-                        "What in the present situation reminds you of $3?",
-                        "What is the connection between me and $3?",
-                        "What else does $3 remind you of?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "ALWAYS",
-            "rank": 1,
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "Can you think of a specific example?",
-                        "When?",
-                        "What incident are you thinking of?",
-                        "Really, always?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "LIKE",
-            "rank": 10,
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        { "alts": [ "AM", "IS", "ARE", "WAS" ] },
-                        { "wildcard": true },
-                        "LIKE",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        { "link": "DIT" }
-                    ]
-                },
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        { "newkey": true }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "EVERYONE",
-            "rank": 2,
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        { "alts": [ "EVERYONE", "EVERYBODY", "NOBODY", "NOONE" ] },
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Really, $2?",
-                        "Surely not $2.",
-                        "Can you think of anyone in particular?",
-                        "Who, for example?",
-                        "You are thinking of a very special person.",
-                        "Who, may I ask?",
-                        "Someone special, perhaps.",
-                        "You have a particular person in mind, don't you?",
-                        "Who do you think you're talking about?"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "EVERYBODY",
-            "rank": 2,
-            "link": "EVERYONE"
-        },
-        {
-            "key": "NOBODY",
-            "rank": 2,
-            "link": "EVERYONE"
-        },
-        {
-            "key": "NOONE",
-            "rank": 2,
-            "link": "EVERYONE"
-        },
-        {
-            "key": "DREAMT",
-            "rank": 4,
-            "decompositions": [
-                {
-                    "pattern": [
-                        { "wildcard": true },
-                        "YOU",
-                        "DREAMT",
-                        { "wildcard": true }
-                    ],
-                    "reassemblies": [
-                        "Really, $4.",
-                        "Have you ever fantasied $4 while you were awake?",
-                        "Have you dreamt $4 before?",
-                        { "link": "DREAM" },
-                        { "newkey": true }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "DREAMED",
-            "substitution": "DREAMT",
-            "rank": 4,
-            "link": "DREAMT"
-        },
-        {
-            "key": "DREAM",
-            "rank": 3,
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "What does that dream suggest to you?",
-                        "Do you dream often?",
-                        "What persons appear in your dreams?",
-                        "Don't you believe that dream has something to do with your problem?",
-                        { "newkey": true }
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "DREAMS",
-            "substitution": "DREAM",
-            "rank": 3,
-            "link": "DREAM"
-        },
-        {
-            "key": "HOW",
-            "link": "WHAT"
-        },
-        {
-            "key": "WHEN",
-            "link": "WHAT"
-        },
-        {
-            "key": "ALIKE",
-            "rank": 10,
-            "link": "DIT"
-        },
-        {
-            "key": "SAME",
-            "rank": 10,
-            "link": "DIT"
-        },
-        {
-            "key": "CERTAINLY",
-            "link": "YES"
-        },
-        {
-            "key": "WERE",
-            "substitution": "WAS",
-            "link": "WAS"
-        },
-        {
-            "key": "XFREMD",
-            "decompositions": [
-                {
-                    "pattern": [ { "wildcard": true } ],
-                    "reassemblies": [
-                        "I am sorry, I speak only English."
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "DEUTSCH",
-            "link": "XFREMD"
-        },
-        {
-            "key": "FRANCAIS",
-            "link": "XFREMD"
-        },
-        {
-            "key": "ITALIANO",
-            "link": "XFREMD"
-        },
-        {
-            "key": "ESPANOL",
-            "link": "XFREMD"
-        }
-    ],
-
-    "memory": [
-        {
-            "keyword": "MY",
-            "pattern": [
-                { "wildcard": true },
-                "YOUR",
-                { "wildcard": true }
-            ],
-            "template": "Let's discuss further why your $3."
-        },
-        {
-            "keyword": "MY",
-            "pattern": [
-                { "wildcard": true },
-                "YOUR",
-                { "wildcard": true }
-            ],
-            "template": "Earlier you said your $3."
-        },
-        {
-            "keyword": "MY",
-            "pattern": [
-                { "wildcard": true },
-                "YOUR",
-                { "wildcard": true }
-            ],
-            "template": "But your $3."
-        },
-        {
-            "keyword": "MY",
-            "pattern": [
-                { "wildcard": true },
-                "YOUR",
-                { "wildcard": true }
-            ],
-            "template": "Does that have anything to do with the fact that your $3?"
-        }
-    ],
-
-    "none": [
-        "I am not sure I understand you fully.",
-        "Please go on.",
-        "What does that suggest to you?",
-        "Do you feel strongly about discussing such things?"
+  "hello": "HOW DO YOU DO. PLEASE TELL ME YOUR PROBLEM",
+  "none": [
+    "I AM NOT SURE I UNDERSTAND YOU FULLY",
+    "PLEASE GO ON",
+    "WHAT DOES THAT SUGGEST TO YOU",
+    "DO YOU FEEL STRONGLY ABOUT DISCUSSING SUCH THINGS"
+  ],
+  "memory": {
+    "keyword": "MY",
+    "rules": [
+      {
+        "pattern": [
+          "0",
+          "YOUR",
+          "0"
+        ],
+        "reassembly": "LETS DISCUSS FURTHER WHY YOUR 3"
+      },
+      {
+        "pattern": [
+          "0",
+          "YOUR",
+          "0"
+        ],
+        "reassembly": "EARLIER YOU SAID YOUR 3"
+      },
+      {
+        "pattern": [
+          "0",
+          "YOUR",
+          "0"
+        ],
+        "reassembly": "BUT YOUR 3"
+      },
+      {
+        "pattern": [
+          "0",
+          "YOUR",
+          "0"
+        ],
+        "reassembly": "DOES THAT HAVE ANYTHING TO DO WITH THE FACT THAT YOUR 3"
+      }
     ]
+  },
+  "keywords": [
+    {
+      "keyword": "SORRY",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "PLEASE DON'T APOLIGIZE",
+            "APOLOGIES ARE NOT NECESSARY",
+            "WHAT FEELINGS DO YOU HAVE WHEN YOU APOLOGIZE",
+            "I'VE TOLD YOU THAT APOLOGIES ARE NOT REQUIRED"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "DONT",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "DON'T"
+    },
+    {
+      "keyword": "CANT",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "CAN'T"
+    },
+    {
+      "keyword": "WONT",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "WON'T"
+    },
+    {
+      "keyword": "REMEMBER",
+      "precedence": 5,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "REMEMBER",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU OFTEN THINK OF 4",
+            "DOES THINKING OF 4 BRING ANYTHING ELSE TO MIND",
+            "WHAT ELSE DO YOU REMEMBER",
+            "WHY DO YOU REMEMBER 4 JUST NOW",
+            "WHAT IN THE PRESENT SITUATION REMINDS YOU OF 4",
+            "WHAT IS THE CONNECTION BETWEEN ME AND 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "DO",
+            "I",
+            "REMEMBER",
+            "0"
+          ],
+          "reassembly": [
+            "DID YOU THINK I WOULD FORGET 5",
+            "WHY DO YOU THINK I SHOULD RECALL 5 NOW",
+            "WHAT ABOUT 5",
+            "=WHAT",
+            "YOU MENTIONED 5"
+          ]
+        },
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "NEWKEY"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "IF",
+      "precedence": 3,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "IF",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU THINK ITS LIKELY THAT 3",
+            "DO YOU WISH THAT 3",
+            "WHAT DO YOU THINK ABOUT 3",
+            "REALLY, 2 3"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "DREAMT",
+      "precedence": 4,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "DREAMT",
+            "0"
+          ],
+          "reassembly": [
+            "REALLY, 4",
+            "HAVE YOU EVER FANTASIED 4 WHILE YOU WERE AWAKE",
+            "HAVE YOU DREAMT 4 BEFORE",
+            "=DREAM",
+            "NEWKEY"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "DREAMED",
+      "precedence": 4,
+      "substitution": "DREAMT",
+      "decompositions": [
+        { "link": "DREAMT" }
+      ]
+    },
+    {
+      "keyword": "DREAM",
+      "precedence": 3,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "WHAT DOES THAT DREAM SUGGEST TO YOU",
+            "DO YOU DREAM OFTEN",
+            "WHAT PERSONS APPEAR IN YOUR DREAMS",
+            "DON'T YOU BELIEVE THAT DREAM HAS SOMETHING TO DO WITH YOUR PROBLEM",
+            "NEWKEY"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "DREAMS",
+      "precedence": 3,
+      "substitution": "DREAM",
+      "decompositions": [
+        { "link": "DREAM" }
+      ]
+    },
+    {
+      "keyword": "HOW",
+      "precedence": null,
+      "decompositions": [
+        { "link": "WHAT" }
+      ]
+    },
+    {
+      "keyword": "WHEN",
+      "precedence": null,
+      "decompositions": [
+        { "link": "WHAT" }
+      ]
+    },
+    {
+      "keyword": "ALIKE",
+      "precedence": 10,
+      "decompositions": [
+        { "link": "DIT" }
+      ]
+    },
+    {
+      "keyword": "SAME",
+      "precedence": 10,
+      "decompositions": [
+        { "link": "DIT" }
+      ]
+    },
+    {
+      "keyword": "CERTAINLY",
+      "precedence": null,
+      "decompositions": [
+        { "link": "YES" }
+      ]
+    },
+    {
+      "keyword": "FEEL",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "BELIEF"
+      ]
+    },
+    {
+      "keyword": "THINK",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "BELIEF"
+      ]
+    },
+    {
+      "keyword": "BELIEVE",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "BELIEF"
+      ]
+    },
+    {
+      "keyword": "WISH",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "BELIEF"
+      ]
+    },
+    {
+      "keyword": "PERHAPS",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "YOU DON'T SEEM QUITE CERTAIN",
+            "WHY THE UNCERTAIN TONE",
+            "CAN'T YOU BE MORE POSITIVE",
+            "YOU AREN'T SURE",
+            "DON'T YOU KNOW"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "MAYBE",
+      "precedence": null,
+      "decompositions": []
+    },
+    {
+      "keyword": "NAME",
+      "precedence": 15,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "I AM NOT INTERESTED IN NAMES",
+            "I'VE TOLD YOU BEFORE, I DON'T CARE ABOUT NAMES - PLEASE CONTINUE"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "DEUTSCH",
+      "precedence": null,
+      "decompositions": []
+    },
+    {
+      "keyword": "FRANCAIS",
+      "precedence": null,
+      "decompositions": []
+    },
+    {
+      "keyword": "ITALIANO",
+      "precedence": null,
+      "decompositions": []
+    },
+    {
+      "keyword": "ESPANOL",
+      "precedence": null,
+      "decompositions": []
+    },
+    {
+      "keyword": "XFREMD",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "I AM SORRY, I SPEAK ONLY ENGLISH"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "HELLO",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "HOW DO YOU DO. PLEASE STATE YOUR PROBLEM"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "COMPUTER",
+      "precedence": 50,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "DO COMPUTERS WORRY YOU",
+            "WHY DO YOU MENTION COMPUTERS",
+            "WHAT DO YOU THINK MACHINES HAVE TO DO WITH YOUR PROBLEM",
+            "DON'T YOU THINK COMPUTERS CAN HELP PEOPLE",
+            "WHAT ABOUT MACHINES WORRIES YOU",
+            "WHAT DO YOU THINK ABOUT MACHINES"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "MACHINE",
+      "precedence": 50,
+      "decompositions": []
+    },
+    {
+      "keyword": "MACHINES",
+      "precedence": 50,
+      "decompositions": []
+    },
+    {
+      "keyword": "COMPUTERS",
+      "precedence": 50,
+      "decompositions": []
+    },
+    {
+      "keyword": "AM",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "ARE",
+            "YOU",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU BELIEVE YOU ARE 4",
+            "WOULD YOU WANT TO BE 4",
+            "YOU WISH I WOULD TELL YOU YOU ARE 4",
+            "WHAT WOULD IT MEAN IF YOU WERE 4",
+            "=WHAT"
+          ]
+        },
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "WHY DO YOU SAY 'AM'",
+            "I DON'T UNDERSTAND THAT"
+          ]
+        }
+      ],
+      "substitution": "ARE"
+    },
+    {
+      "keyword": "ARE",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "ARE",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "WHY ARE YOU INTERESTED IN WHETHER I AM 4 OR NOT",
+            "WOULD YOU PREFER IF I WEREN'T 4",
+            "PERHAPS I AM 4 IN YOUR FANTASIES",
+            "DO YOU SOMETIMES THINK I AM 4",
+            "=WHAT"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "ARE",
+            "0"
+          ],
+          "reassembly": [
+            "DID YOU THINK THEY MIGHT NOT BE 3",
+            "WOULD YOU LIKE IT IF THEY WERE NOT 3",
+            "WHAT IF THEY WERE NOT 3",
+            "POSSIBLY THEY ARE 3"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "YOUR",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "MY",
+            "0"
+          ],
+          "reassembly": [
+            "WHY ARE YOU CONCERNED OVER MY 3",
+            "WHAT ABOUT YOUR OWN 3",
+            "ARE YOU WORRIED ABOUT SOMEONE ELSES 3",
+            "REALLY, MY 3"
+          ]
+        }
+      ],
+      "substitution": "MY"
+    },
+    {
+      "keyword": "WAS",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "WAS",
+            "YOU",
+            "0"
+          ],
+          "reassembly": [
+            "WHAT IF YOU WERE 4",
+            "DO YOU THINK YOU WERE 4",
+            "WERE YOU 4",
+            "WHAT WOULD IT MEAN IF YOU WERE 4",
+            "WHAT DOES ' 4 ' SUGGEST TO YOU",
+            "=WHAT"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "WAS",
+            "0"
+          ],
+          "reassembly": [
+            "WERE YOU REALLY",
+            "WHY DO YOU TELL ME YOU WERE 4 NOW",
+            "PERHAPS I ALREADY KNEW YOU WERE 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "WAS",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "WOULD YOU LIKE TO BELIEVE I WAS 4",
+            "WHAT SUGGESTS THAT I WAS 4",
+            "WHAT DO YOU THINK",
+            "PERHAPS I WAS 4",
+            "WHAT IF I HAD BEEN 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "NEWKEY"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "WERE",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "WAS"
+    },
+    {
+      "keyword": "ME",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "YOU"
+    },
+    {
+      "keyword": "I'M",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": ["0","YOU'RE","0"],
+          "pre": "YOU ARE 3",
+          "link": "I"
+        }
+      ],
+      "substitution": "YOU'RE"
+    },
+    {
+      "keyword": "YOU'RE",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": ["0","I'M","0"],
+          "pre": "I ARE 3",
+          "link": "YOU"
+        }
+      ],
+      "substitution": "I'M"
+    },
+    {
+      "keyword": "MYSELF",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "YOURSELF"
+    },
+    {
+      "keyword": "YOURSELF",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "MYSELF"
+    },
+    {
+      "keyword": "MOTHER",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "NOUN",
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "MOM",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "MOTHER",
+      "dlist": [
+        "",
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "DAD",
+      "precedence": null,
+      "decompositions": [],
+      "substitution": "FATHER",
+      "dlist": [
+        "",
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "FATHER",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "NOUN",
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "SISTER",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "BROTHER",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "WIFE",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "CHILDREN",
+      "precedence": null,
+      "decompositions": [],
+      "dlist": [
+        "FAMILY"
+      ]
+    },
+    {
+      "keyword": "I",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            {
+              "set": [
+                "WANT",
+                "NEED"
+              ]
+            },
+            "0"
+          ],
+          "reassembly": [
+            "WHAT WOULD IT MEAN TO YOU IF YOU GOT 4",
+            "WHY DO YOU WANT 4",
+            "SUPPOSE YOU GOT 4 SOON",
+            "WHAT IF YOU NEVER GOT 4",
+            "WHAT WOULD GETTING 4 MEAN TO YOU",
+            "WHAT DOES WANTING 4 HAVE TO DO WITH THIS DISCUSSION"
+          ]
+        },
+        {
+          "pattern": ["0", "YOU", "ARE", "0", { "set": ["SAD","UNHAPPY","DEPRESSED","SICK"] }, "0"],
+          "reassembly": [
+            "I AM SORRY TO HEAR YOU ARE 5",
+            "DO YOU THINK COMING HERE WILL HELP YOU NOT TO BE 5",
+            "I'M SURE ITS NOT PLEASANT TO BE 5",
+            "CAN YOU EXPLAIN WHAT MADE YOU 5"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "ARE",
+            "0",
+            "*HAPPY",
+            "ELATED",
+            "GLAD",
+            "BETTER",
+            "0"
+          ],
+          "reassembly": [
+            "HOW HAVE I HELPED YOU TO BE 5",
+            "HAS YOUR TREATMENT MADE YOU 5",
+            "WHAT MAKES YOU 5 JUST NOW",
+            "CAN YOU EXPLAIN WHY YOU ARE SUDDENLY 5"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "WAS",
+            "0"
+          ],
+          "reassembly": [
+            "=WAS"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            {
+              "tag": "BELIEF"
+            },
+            "YOU",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU REALLY THINK SO",
+            "BUT YOU ARE NOT SURE YOU 5",
+            "DO YOU REALLY DOUBT YOU 5"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "0",
+            {
+              "tag": "BELIEF"
+            },
+            "0",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "=YOU"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "ARE",
+            "0"
+          ],
+          "reassembly": [
+            "IS IT BECAUSE YOU ARE 4 THAT YOU CAME TO ME",
+            "HOW LONG HAVE YOU BEEN 4",
+            "DO YOU BELIEVE IT NORMAL TO BE 4",
+            "DO YOU ENJOY BEING 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            {
+              "set": [
+                "CAN'T",
+                "CANNOT"
+              ]
+            },
+            "0"
+          ],
+          "reassembly": [
+            "HOW DO YOU KNOW YOU CAN'T 4",
+            "HAVE YOU TRIED",
+            "PERHAPS YOU COULD 4 NOW",
+            "DO YOU REALLY WANT TO BE ABLE TO 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "DON'T",
+            "0"
+          ],
+          "reassembly": [
+            "DON'T YOU REALLY 4",
+            "WHY DON'T YOU 4",
+            "DO YOU WISH TO BE ABLE TO 4",
+            "DOES THAT TROUBLE YOU"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "FEEL",
+            "0"
+          ],
+          "reassembly": [
+            "TELL ME MORE ABOUT SUCH FEELINGS",
+            "DO YOU OFTEN FEEL 4",
+            "DO YOU ENJOY FEELING 4",
+            "OF WHAT DOES FEELING 4 REMIND YOU"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOU",
+            "0",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "PERHAPS IN YOUR FANTASY WE 3 EACH OTHER",
+            "DO YOU WISH TO 3 ME",
+            "YOU SEEM TO NEED TO 3 ME",
+            "DO YOU 3 ANYONE ELSE"
+          ]
+        },
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "YOU SAY 1",
+            "CAN YOU ELABORATE ON THAT",
+            "DO YOU SAY 1 FOR SOME SPECIAL REASON",
+            "THAT'S QUITE INTERESTING"
+          ]
+        }
+      ],
+      "substitution": "YOU"
+    },
+    {
+      "keyword": "YOU",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "I",
+            "REMIND",
+            "YOU",
+            "OF",
+            "0"
+          ],
+          "reassembly": [
+            "=DIT"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "I",
+            "ARE",
+            "0"
+          ],
+          "reassembly": [
+            "WHAT MAKES YOU THINK I AM 4",
+            "DOES IT PLEASE YOU TO BELIEVE I AM 4",
+            "DO YOU SOMETIMES WISH YOU WERE 4",
+            "PERHAPS YOU WOULD LIKE TO BE 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "I",
+            "0",
+            "YOU"
+          ],
+          "reassembly": [
+            "WHY DO YOU THINK I 3 YOU",
+            "YOU LIKE TO THINK I 3 YOU - DON'T YOU",
+            "WHAT MAKES YOU THINK I 3 YOU",
+            "REALLY, I 3 YOU",
+            "DO YOU WISH TO BELIEVE I 3 YOU",
+            "SUPPOSE I DID 3 YOU - WHAT WOULD THAT MEAN",
+            "DOES SOMEONE ELSE BELIEVE I 3 YOU"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "WE WERE DISCUSSING YOU - NOT ME",
+            "OH, I 3",
+            "YOU'RE NOT REALLY TALKING ABOUT ME - ARE YOU",
+            "WHAT ARE YOUR FEELINGS NOW"
+          ]
+        }
+      ],
+      "substitution": "I"
+    },
+    {
+      "keyword": "YES",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "YOU SEEM QUITE POSITIVE",
+            "YOU ARE SURE",
+            "I SEE",
+            "I UNDERSTAND"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "NO",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "ARE YOU SAYING 'NO' JUST TO BE NEGATIVE",
+            "YOU ARE BEING A BIT NEGATIVE",
+            "WHY NOT",
+            "WHY 'NO'"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "MY",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "YOUR",
+            "0",
+            {
+              "tag": "FAMILY"
+            },
+            "0"
+          ],
+          "reassembly": [
+            "TELL ME MORE ABOUT YOUR FAMILY",
+            "WHO ELSE IN YOUR FAMILY 5",
+            "YOUR 4",
+            "WHAT ELSE COMES TO MIND WHEN YOU THINK OF YOUR 4"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "YOUR",
+            "0"
+          ],
+          "reassembly": [
+            "YOUR 3",
+            "WHY DO YOU SAY YOUR 3",
+            "DOES THAT SUGGEST ANYTHING ELSE WHICH BELONGS TO YOU",
+            "IS IT IMPORTANT TO YOU THAT 2 3"
+          ]
+        }
+      ],
+      "substitution": "YOUR"
+    },
+    {
+      "keyword": "CAN",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "CAN",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "YOU BELIEVE I CAN 4 DON'T YOU",
+            "=WHAT",
+            "YOU WANT ME TO BE ABLE TO 4",
+            "PERHAPS YOU WOULD LIKE TO BE ABLE TO 4 YOURSELF"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "CAN",
+            "YOU",
+            "0"
+          ],
+          "reassembly": [
+            "WHETHER OR NOT YOU CAN 4 DEPENDS ON YOU MORE THAN ON ME",
+            "DO YOU WANT TO BE ABLE TO 4",
+            "PERHAPS YOU DON'T WANT TO 4",
+            "=WHAT"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "WHAT",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "WHY DO YOU ASK",
+            "DOES THAT QUESTION INTEREST YOU",
+            "WHAT IS IT YOU REALLY WANT TO KNOW",
+            "ARE SUCH QUESTIONS MUCH ON YOUR MIND",
+            "WHAT ANSWER WOULD PLEASE YOU MOST",
+            "WHAT DO YOU THINK",
+            "WHAT COMES TO YOUR MIND WHEN YOU ASK THAT",
+            "HAVE YOU ASKED SUCH QUESTIONS BEFORE",
+            "HAVE YOU ASKED ANYONE ELSE"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "BECAUSE",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "IS THAT THE REAL REASON",
+            "DON'T ANY OTHER REASONS COME TO MIND",
+            "DOES THAT REASON SEEM TO EXPLAIN ANYTHING ELSE",
+            "WHAT OTHER REASONS MIGHT THERE BE"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "WHY",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            "WHY",
+            "DON'T",
+            "I",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU BELIEVE I DON'T 5",
+            "PERHAPS I WILL 5 IN GOOD TIME",
+            "SHOULD YOU 5 YOURSELF",
+            "YOU WANT ME TO 5",
+            "=WHAT"
+          ]
+        },
+        {
+          "pattern": [
+            "0",
+            "WHY",
+            "CAN'T",
+            "YOU",
+            "0"
+          ],
+          "reassembly": [
+            "DO YOU THINK YOU SHOULD BE ABLE TO 5",
+            "DO YOU WANT TO BE ABLE TO 5",
+            "DO YOU BELIEVE THIS WILL HELP YOU TO 5",
+            "HAVE YOU ANY IDEA WHY YOU CAN'T 5",
+            "=WHAT"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "EVERYONE",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "pattern": [
+            "0",
+            {
+              "set": [
+                "EVERYONE",
+                "EVERYBODY",
+                "NOBODY",
+                "NOONE"
+              ]
+            },
+            "0"
+          ],
+          "reassembly": [
+            "REALLY, 2",
+            "SURELY NOT 2",
+            "CAN YOU THINK OF ANYONE IN PARTICULAR",
+            "WHO, FOR EXAMPLE",
+            "YOU ARE THINKING OF A VERY SPECIAL PERSON",
+            "WHO, MAY I ASK",
+            "SOMEONE SPECIAL PERHAPS",
+            "YOU HAVE A PARTICULAR PERSON IN MIND, DON'T YOU",
+            "WHO DO YOU THINK YOU'RE TALKING ABOUT"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "EVERYBODY",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "link": "EVERYONE"
+        }
+      ]
+    },
+    {
+      "keyword": "NOBODY",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "link": "EVERYONE"
+        }
+      ]
+    },
+    {
+      "keyword": "NOONE",
+      "precedence": 2,
+      "decompositions": [
+        {
+          "link": "EVERYONE"
+        }
+      ]
+    },
+    {
+      "keyword": "ALWAYS",
+      "precedence": 1,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "CAN YOU THINK OF A SPECIFIC EXAMPLE",
+            "WHEN",
+            "WHAT INCIDENT ARE YOU THINKING OF",
+            "REALLY, ALWAYS"
+          ]
+        }
+      ]
+    },
+    {
+      "keyword": "LIKE",
+      "precedence": 10,
+      "decompositions": [
+        {
+          "pattern": ["0", { "set": ["AM","IS","ARE","WAS"] }, "0", "LIKE", "0"],
+          "reassembly": ["=DIT"]
+        },
+        {
+          "pattern": ["0"],
+          "reassembly": ["NEWKEY"]
+        }
+      ]
+    },
+    {
+      "keyword": "DIT",
+      "precedence": null,
+      "decompositions": [
+        {
+          "pattern": [
+            "0"
+          ],
+          "reassembly": [
+            "IN WHAT WAY",
+            "WHAT RESEMBLANCE DO YOU SEE",
+            "WHAT DOES THAT SIMILARITY SUGGEST TO YOU",
+            "WHAT OTHER CONNECTIONS DO YOU SEE",
+            "WHAT DO YOU SUPPOSE THAT RESEMBLANCE MEANS",
+            "WHAT IS THE CONNECTION, DO YOU SUPPOSE",
+            "COULD THERE REALLY BE SOME CONNECTION",
+            "HOW"
+          ]
+        }
+      ]
+    }
+  ]
 }

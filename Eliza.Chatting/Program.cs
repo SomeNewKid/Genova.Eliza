@@ -46,12 +46,7 @@ internal class Program
         };
         OpenAiApiGateway openAiApiGateway = new (generationOptions, httpClientFactory);
 
-        ElizaEngine eliza = new();
-        string greeting = eliza.Greeting;
-        if (string.IsNullOrEmpty(greeting))
-        {
-            greeting = "What would you like to chat about?";
-        }
+        Eliza eliza = new();
 
         Woody woody = new(configuration, openAiApiGateway);
 
@@ -59,7 +54,7 @@ internal class Program
         await StartChat(eliza, woody, turns, fullPath);
     }
 
-    private static async Task StartChat(ElizaEngine eliza, Woody woody, int turns, string fullPath)
+    private static async Task StartChat(Eliza eliza, Woody woody, int turns, string fullPath)
     {
         var transcript = new List<string>();
 

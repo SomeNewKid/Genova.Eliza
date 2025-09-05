@@ -1,398 +1,520 @@
-﻿// This file is part of the Genova project licensed under the GNU General Public License v3.0.
-// See the LICENSE file in the project root for more information.
+﻿// ElizaEngine.cs
+// C# engine for the 1966 ELIZA (DOCTOR) logic, designed to be as close as practical
+// to the original MAD-SLIP program's behavior. This file implements the two
+// SLIP-library-equivalent pieces called out earlier:
+//   * HASH: bucket hashing (32 buckets) and 4-way hash for MEMORY rule selection
+//   * YMATCH + ASSMBL: pattern decomposition and reassembly
+//
+// Dependencies: ElizaTyped.cs (or ElizaTyped_v2.cs) and a DOCTOR.json shaped for it.
+//
+// NOTE ON FIDELITY
+// ----------------
+// - Tokenization is UPPERCASE and uses delimiters '.', ',', and 'BUT' as in the source.
+// - Keyword scanning, precedence selection, link handling, memory logic, NONE fallbacks,
+//   and per-pattern round-robin reassemblies follow the original control flow.
+// - YMATCH/ASSMBL are implemented at token level with support for:
+//     • numeric placeholders ("0".."9")  -> wildcards that capture spans (or empty)
+//     • set tokens {"set":[...]}         -> single-token membership match (captured)
+//     • tag tokens {"tag":"BELIEF"}      -> single-token tag membership match (captured)
+//   Captures are indexed in encounter order and interpolated into reassembly strings.
+//   This matches the spirit of the original. If you need bit-for-bit transcript
+//   reproduction, further tuning of capture numbering may be required for a few
+//   patterns; the hooks are provided below.
+//
+// Build: .NET 6+
+// Example usage (see bottom comment).
 
-using Genova.Common.Attributes;
-using Genova.Eliza.Enums;
-using Genova.Eliza.Models;
-using Microsoft.AspNetCore.Components.RenderTree;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Genova.Eliza;
 
-/// <summary>
-/// Orchestrates a full ELIZA turn using a loaded <see cref="DoctorScript"/>.
-/// <para>
-/// Pipeline per turn:
-/// <list type="number">
-/// <item><description>Tokenize input.</description></item>
-/// <item><description>Apply <c>simple</c> + lexicon + <c>pre</c> substitutions.</description></item>
-/// <item><description>Evaluate memory rules (R6).</description></item>
-/// <item><description>Select highest-ranked keyword present (tie-break by script order).</description></item>
-/// <item><description>Try decompositions in order; select/cycle reassemblies; process directives.</description></item>
-/// <item><description>On <c>NEWKEY</c>, advance to next candidate; on <c>link</c>/<c>prelink</c>, jump accordingly.</description></item>
-/// <item><description>If no reply: emit memory (per policy), else fall back to <c>none</c> lines.</description></item>
-/// </list>
-/// </para>
-/// </summary>
-[CodeQuality(Public = true, Justification = "Intended for use by the RustyKane.com website.")]
-public sealed class ElizaEngine
+internal sealed class ElizaEngine
 {
-    private readonly DoctorScript _script;
-    private readonly Tokenizer _tokenizer;
-    private readonly SubstitutionService _subs;
-    private readonly KeywordSelector _selector;
-    private readonly PatternMatcher _matcher;
-    private readonly ReassemblySelector _reasmSelector;
-    private readonly MemoryManager _memory;
+    private readonly ElizaTyped _script;
+    private readonly Dictionary<string, KeywordEntry> _kwByWord;
+    private readonly List<KeywordEntry>[] _buckets = new List<KeywordEntry>[32];
+    private readonly Dictionary<(string kw, int di), int> _reasmRotation = new();
+    private readonly Queue<string> _memory = new();
+    private readonly string _memoryKeyword;
+    private readonly Dictionary<String, HashSet<string>> _tagMap;
 
-    private readonly Dictionary<string, Keyword> _byKey;
-    private readonly StringComparer _keyCmp = StringComparer.OrdinalIgnoreCase;
+    private int _limit = 1; // cycles 1..4
+    private int _noneIndex = 0;
 
-    private int _turnIndex = 0;
-    private int _noneCursor = 0;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ElizaEngine"/> class.
-    /// </summary>
-    /// <param name="enableMemory">Whether to enable memory (R6) behavior.</param>
-    /// <param name="sentenceCase">Whether to apply sentence casing to rendered replies.</param>
-    /// <param name="ensureTerminalPunctuation">Whether to append '.' if no terminal punctuation is present.</param>
-    public ElizaEngine(
-        bool enableMemory = true,
-        bool sentenceCase = true,
-        bool ensureTerminalPunctuation = true)
+    private static readonly string[] _noMatch = new[]
     {
-        DoctorScript script = ScriptLoader.Load("DOCTOR.json")
-                              ?? throw new InvalidOperationException("Failed to load DOCTOR script.");
+        "PLEASE CONTINUE", "HMMM", "GO ON , PLEASE", "I SEE"
+    };
 
+    private static readonly HashSet<string> _delims = new(StringComparer.Ordinal)
+    { ".", ",", "BUT" };
+
+    public ElizaEngine(ElizaTyped script)
+    {
         _script = script;
 
-        _tokenizer = new Tokenizer { NormalizeUnicode = true, KeepPunctuationTokens = false, LowercaseTokens = false };
-        _subs = new SubstitutionService(script);
-        _selector = new KeywordSelector(script, caseInsensitive: true);
-        _matcher = new PatternMatcher(script, caseInsensitive: true);
-        _reasmSelector = new ReassemblySelector(caseInsensitiveKeys: true);
-        _memory = new MemoryManager(script, enabled: enableMemory);
+        _kwByWord = new Dictionary<string, KeywordEntry>(StringComparer.Ordinal);
+        foreach (var k in script.Keywords)
+            _kwByWord[k.Keyword] = k;
 
-        SentenceCase = sentenceCase;
-        EnsureTerminalPunctuation = ensureTerminalPunctuation;
+        for (int i = 0; i < _buckets.Length; i++) _buckets[i] = new List<KeywordEntry>();
+        foreach (var k in script.Keywords)
+            _buckets[Hash32(k.Keyword)].Add(k);
 
-        _byKey = script.Keywords
-            .GroupBy(k => k.Key ?? string.Empty, _keyCmp)
-            .ToDictionary(g => g.Key, g => g.First(), _keyCmp);
+        _memoryKeyword = script.Memory.Keyword;
+
+        // TAG map from DLIST (TAG -> words having that tag)
+        _tagMap = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var k in script.Keywords)
+        {
+            if (k.DList is null) continue;
+            foreach (var tag in k.DList)
+            {
+                if (!_tagMap.TryGetValue(tag, out var set))
+                {
+                    set = new HashSet<string>(StringComparer.Ordinal);
+                    _tagMap[tag] = set;
+                }
+                set.Add(k.Keyword);
+            }
+        }
     }
 
-    /// <summary>
-    /// Gets or sets a value indicating whether sentence casing is applied to final replies.
-    /// </summary>
-    public bool SentenceCase { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether terminal punctuation is ensured on final replies.
-    /// </summary>
-    public bool EnsureTerminalPunctuation { get; set; }
-
-    /// <summary>
-    /// Gets the initial greeting line from the script.
-    /// </summary>
-    public string Greeting => _script.Greeting;
-
-    /// <summary>
-    /// Generates a single ELIZA reply to the given raw user input.
-    /// </summary>
-    /// <param name="input">Raw user input for this turn.</param>
-    /// <returns>The generated reply string.</returns>
-    public string Reply(string? input)
+    public string Reply(string userInput)
     {
-        _turnIndex++;
+        userInput = userInput.Replace("?", ".").Replace("!", ".").Replace(";", ".");
 
-        // 1) Tokenize and preprocess
-        List<string> tokens = _tokenizer.Tokenize(input ?? string.Empty);
-        List<string> preTokens = _subs.ProcessInputTokens(tokens);
+        // LIMIT 1..4
+        _limit++;
+        if (_limit == 5) _limit = 1;
 
-        // 2) Evaluate memory (R6) side-channel
-        _memory.Evaluate(preTokens);
+        var tokens = Tokenize(userInput);
+        if (tokens.Count == 0)
+            return NoneFallback();
 
-        // 3) Find candidate keywords present in input
-        List<Keyword> candidates = _selector.FindCandidates(preTokens);
+        // SCAN for keyword
+        KeywordEntry? selectedKw = null;
+        int? selectedPred = null;
 
-        // If no candidates, we will immediately try memory / NONE
-        if (candidates.Count == 0)
+        int i = 0;
+        while (i < tokens.Count)
         {
-            if (TryEmitMemory(out string? memText))
+            var w = tokens[i];
+
+            if (_delims.Contains(w))
             {
-                return memText;
-            }
-
-            return EmitNone();
-        }
-
-        // 4) Attempt to produce a reply by walking candidates, handling directives
-        List<string> workingTokens = preTokens;
-        int candIndex = 0;
-        int guardSteps = 0;
-        const int MaxSteps = 32;  // safety against pathological loops
-        const int MaxLinkDepth = 8;
-
-        int linkDepth = 0;
-        Keyword? current = candidates[candIndex];
-
-        while (guardSteps++ < MaxSteps)
-        {
-            // Links-only keyword (R4)
-            if ((current.Decompositions == null || current.Decompositions.Count == 0)
-                && !string.IsNullOrWhiteSpace(current.Link))
-            {
-                if (!TryGetKeyword(current.Link!, out Keyword? target))
+                if (selectedKw is null)
                 {
-                    break; // invalid link; bail to fallback
+                    // NULSTL: discard left part including delimiter
+                    tokens.RemoveRange(0, i + 1);
+                    i = 0;
+                    continue;
                 }
-
-                current = target;
-                if (++linkDepth > MaxLinkDepth)
+                else
                 {
+                    // NULSTR: discard right part from delimiter
+                    tokens.RemoveRange(i, tokens.Count - i);
                     break;
                 }
-
-                continue;
             }
 
-            // Try decompositions in order
-            bool matchedAnyDecomp = false;
-            bool restart = false;
-
-            if (current.Decompositions != null)
+            var bucket = _buckets[Hash32(w)];
+            for (int j = 0; j < bucket.Count; j++)
             {
-                List<Decomposition> decomps = current.Decompositions;
-                int decompCount = decomps.Count;
+                var cand = bucket[j];
+                if (!StringEquals(cand.Keyword, w)) continue;
 
-                for (int di = 0; di < decompCount; di++)
+                if (!Tests_Substitute(tokens, i, cand)) continue;
+
+                if (selectedKw is null && cand.Precedence is null)
                 {
-                    if (current.Decompositions == null)
+                    selectedKw = cand;
+                }
+                else if (cand.Precedence is { } p)
+                {
+                    if (selectedPred is null || p > selectedPred.Value)
                     {
-                        break;
-                    }
-
-                    Decomposition decomp = decomps[di];
-
-                    if (_matcher.TryMatch(workingTokens, decomp, out List<string>? captures))
-                    {
-                        matchedAnyDecomp = true;
-
-                        // Choose next reassembly for (keyword,decomp)
-                        ReassemblyItem item = _reasmSelector.Select(current.Key, di, decomp.Reassemblies);
-
-                        // Process item / directive
-                        DirectiveOutcome outcome = DirectiveProcessor.Process(
-                            item,
-                            captures,
-                            postMap: _subs.PostMap,
-                            applyPost: true,
-                            sentenceCase: SentenceCase,
-                            ensureTerminalPunctuation: EnsureTerminalPunctuation);
-
-                        switch (outcome.Action)
-                        {
-                            case DirectiveAction.EmitText:
-                            {
-                                return outcome.Text ?? EmitNone();
-                            }
-
-                            case DirectiveAction.NewKey:
-                            {
-                                if (!AdvanceCandidate(candidates, ref candIndex, out current))
-                                {
-                                    if (TryEmitMemory(out string? mem1))
-                                    {
-                                        return mem1;
-                                    }
-
-                                    return EmitNone();
-                                }
-
-                                // Reset working tokens to original preTokens when leaving link/jump path
-                                workingTokens = preTokens;
-                                restart = true;
-                                continue;
-                            }
-
-                            case DirectiveAction.Link:
-                            {
-                                if (string.IsNullOrWhiteSpace(outcome.LinkTarget)
-                                    || !TryGetKeyword(outcome.LinkTarget!, out Keyword? linkKw))
-                                {
-                                    if (TryEmitMemory(out string? mem2))
-                                    {
-                                        return mem2;
-                                    }
-
-                                    return EmitNone();
-                                }
-
-                                current = linkKw;
-
-                                if (++linkDepth > MaxLinkDepth)
-                                {
-                                    if (TryEmitMemory(out string? mem3))
-                                    {
-                                        return mem3;
-                                    }
-
-                                    return EmitNone();
-                                }
-
-                                restart = true;
-                                continue;
-                            }
-
-                            case DirectiveAction.Prelink:
-                            {
-                                if (string.IsNullOrWhiteSpace(outcome.LinkTarget) ||
-                                    !TryGetKeyword(outcome.LinkTarget!, out Keyword? prelinkKw))
-                                {
-                                    if (TryEmitMemory(out string? mem4))
-                                    {
-                                        return mem4;
-                                    }
-
-                                    return EmitNone();
-                                }
-
-                                // Tokenize the transformed input; DO NOT apply pre-substitutions here.
-                                List<string> tkns = _tokenizer.Tokenize(outcome.TransformedInput ?? string.Empty);
-
-                                workingTokens = tkns;
-
-                                current = prelinkKw;
-
-                                if (++linkDepth > MaxLinkDepth)
-                                {
-                                    if (TryEmitMemory(out string? mem5))
-                                    {
-                                        return mem5;
-                                    }
-
-                                    return EmitNone();
-                                }
-
-                                restart = true;
-                                continue;
-                            }
-
-                            default:
-                            {
-                                // Unknown/None directive—fall through to try next decomposition
-                                break;
-                            }
-                        }
-
-                        if (restart)
-                        {
-                            break;
-                        }
+                        selectedPred = p;
+                        selectedKw = cand;
                     }
                 }
             }
 
-            // If no decomposition matched for this keyword:
-            // - If we arrived here via link/prelink, behave like NEWKEY (advance candidates).
-            // - Otherwise, also advance to next candidate.
-            if (!matchedAnyDecomp)
-            {
-                if (!AdvanceCandidate(candidates, ref candIndex, out current))
-                {
-                    if (TryEmitMemory(out string? mem6))
-                    {
-                        return mem6;
-                    }
-
-                    return EmitNone();
-                }
-
-                // Reset working tokens to original preTokens when leaving link path
-                workingTokens = preTokens;
-                continue;
-            }
-
-            // Safety net: if we matched but produced no directive text, advance candidate
-            if (!AdvanceCandidate(candidates, ref candIndex, out current))
-            {
-                if (TryEmitMemory(out string? mem7))
-                {
-                    return mem7;
-                }
-
-                return EmitNone();
-            }
-
-            workingTokens = preTokens;
+            i++;
         }
 
-        // Guard exceeded; fallback
-        if (TryEmitMemory(out string? mem))
+        if (selectedKw is null)
         {
-            return mem;
+            if (_limit == 4 && _memory.Count > 0)
+                return _memory.Dequeue();
+            return NoneFallback();
         }
 
-        return EmitNone();
+        // MEMORY keyword behavior: enqueue a memory line based on last word hash
+        if (StringEquals(selectedKw.Keyword, _memoryKeyword))
+        {
+            // pick the last token that is NOT a delimiter (., , BUT)
+            string last = "";
+            for (int k = tokens.Count - 1; k >= 0; k--)
+            {
+                if (!_delims.Contains(tokens[k])) { last = tokens[k]; break; }
+            }
+            var idx = Hash4(last) % _script.Memory.Rules.Count;
+
+            //var memRule = _script.Memory.Rules[idx];
+
+            int memIndex = Hash4(last);            // 0..3
+            var memRule = _script.Memory.Rules[memIndex];  // pick 1 of 4 deterministically
+
+            var memOut = AssembleFromRuleIfMatch(memRule, tokens);
+            if (memOut is not null) _memory.Enqueue(memOut);
+        }
+
+        var output = TryDecompositions(selectedKw, tokens);
+        if (output is not null) return output;
+
+        return _noMatch[(_limit - 1) % _noMatch.Length];
+    }
+
+    // ----- HASH (bucket + 4-way) -----
+    private static int Hash32(string word)
+    {
+        int h = 0;
+        for (int i = 0; i < word.Length; i++)
+        {
+            char c = word[i];
+            int v = MapChar(c);
+            h = ((h << 3) ^ v) & 0x7FFFFFFF;
+        }
+        return h & 31;
     }
 
     /// <summary>
-    /// Advances to the next keyword candidate; returns false if none left.
+    /// Recreate SLIP HASH.(D,N): return an n-bit mid-square hash (0..(2^n-1))
+    /// from a 36-bit datum D. Only the least-significant 35 bits of D are squared
+    /// (709x sign+magnitude). n must be between 0 and 15 (inclusive).
     /// </summary>
-    private static bool AdvanceCandidate(List<Keyword> candidates, ref int index, out Keyword current)
+    public static int HashN(ulong d, int n)
     {
-        index++;
-        if (index >= candidates.Count)
+        Debug.Assert(n >= 0 && n <= 15);
+
+        // Mask off to 35-bit magnitude (clear the 709x sign bit).
+        d &= 0x7FFFFFFFFUL;                       // 35 bits of 1s
+
+        // Square in 64-bit, wraparound allowed (original produced 70-bit AC/MQ).
+        unchecked { d = d * d; }
+
+        // Shift the middle n bits down to LSBs.
+        // (Matches: shift by 35 - floor(n/2), per the FAP notes.)
+        d >>= (35 - (n / 2));
+
+        // Keep only n bits.
+        return (int)(d & ((1UL << n) - 1));
+    }
+
+    /// <summary>
+    /// Pack up to 6 characters into a 36-bit datum using 6-bit codes:
+    /// A..Z -> 1..26, 0..9 -> 27..36. Ignores spaces/punct. First char ends up in the top 6 bits.
+    /// </summary>
+    public static ulong PackWord36(string word)
+    {
+        if (word == null) return 0UL;
+
+        var s = word.ToUpperInvariant();
+        int count = 0;
+        ulong acc = 0;
+
+        for (int i = 0; i < s.Length && count < 6; i++)
         {
-            current = null!;
-            return false;
+            char c = s[i];
+            int v = 0;
+            if (c >= 'A' && c <= 'Z') v = (c - 'A' + 1);         // 1..26
+            else if (c >= '0' && c <= '9') v = (c - '0' + 27);   // 27..36
+            else continue;                                       // skip others
+
+            acc = ((acc << 6) | (ulong)(v & 0x3F)) & 0xFFFFFFFFFUL; // keep to 36 bits
+            count++;
         }
 
-        current = candidates[index];
+        // If fewer than 6 codes, acc is still correctly positioned.
+        return acc;
+    }
+
+    // A) Left-packed: first char ends up in the TOP 6 bits (current approach)
+    public static ulong PackWord36_Left(string word)
+    {
+        var s = word.ToUpperInvariant();
+        ulong acc = 0; int count = 0;
+        foreach (char c in s)
+        {
+            int v = Map6(c); if (v == 0) continue;
+            acc = ((acc << 6) | (ulong)(v & 0x3F)) & 0xFFFFFFFFFUL; // 36 bits
+            if (++count == 6) break;
+        }
+        return acc;
+    }
+
+    // B) Right-packed: first char ends up in the BOTTOM 6 bits
+    public static ulong PackWord36_Right(string word)
+    {
+        var s = word.ToUpperInvariant();
+        ulong acc = 0; int count = 0;
+        foreach (char c in s)
+        {
+            int v = Map6(c); if (v == 0) continue;
+            acc |= ((ulong)(v & 0x3F)) << (6 * count); // fill from LSB upwards
+            if (++count == 6) break;
+        }
+        // If fewer than 6 chars, still fine; keep to 36 bits:
+        return acc & 0xFFFFFFFFFUL;
+    }
+
+    // Simple letter/digit mapping; swap this to a 709x BCD table if you have it
+    private static int Map6(char c)
+    {
+        if (c >= 'A' && c <= 'Z') return (c - 'A' + 1);      // 1..26
+        if (c >= '0' && c <= '9') return (c - '0' + 27);     // 27..36
+        return 0; // ignore punctuation/spaces
+    }
+
+
+    /// <summary>
+    /// HASH.(WORD, 2) — 4-way selection (0..3), using SLIP packing + mid-square.
+    /// </summary>
+    public static int Hash4(string word)
+    {
+        int hash = HashN(PackWord36_Right(word), 2);
+        return hash;
+    }
+
+    private static int MapChar(char c)
+    {
+        if (c >= 'A' && c <= 'Z') return (c - 'A' + 1);
+        if (c >= '0' && c <= '9') return (c - '0' + 27);
+        return 0;
+    }
+
+    // ----- TESTS (full-word + substitution) -----
+    private static bool Tests_Substitute(List<string> tokens, int index, KeywordEntry cand)
+    {
+        if (!StringEquals(tokens[index], cand.Keyword)) return false;
+        if (!string.IsNullOrWhiteSpace(cand.Substitution))
+            tokens[index] = cand.Substitution!;
         return true;
     }
 
-    /// <summary>
-    /// Emits a memory response (if available and allowed by the current policy).
-    /// </summary>
-    private bool TryEmitMemory(out string text)
+    // ----- Decomposition selection -----
+    private string? TryDecompositions(KeywordEntry kw, List<string> inputTokens)
     {
-        text = string.Empty;
-
-        if (_memory.TryDequeue(_turnIndex - 1, out string? queued) && !string.IsNullOrWhiteSpace(queued))
+        for (int di = 0; di < kw.Decompositions.Count; di++)
         {
-            // IMPORTANT: Do NOT run post-substitutions on memory text.
-            string rendered = TemplateRenderer.Render(
-                queued!,
-                captures: new List<string> { string.Empty },   // 1-based list with no captures
-                postMap: null,                                  // <-- no post map
-                applyPost: false,                               // <-- do not apply post
-                sentenceCase: SentenceCase,
-                ensureTerminalPunctuation: EnsureTerminalPunctuation);
+            var d = kw.Decompositions[di];
 
-            text = rendered;
-            return true;
+            // Link-only
+            if (!string.IsNullOrWhiteSpace(d.Link) && (d.Pattern is null || d.Pattern.Count == 0))
+            {
+                var linkOut = FollowLink(d.Link!, inputTokens);
+                if (linkOut is not null) return linkOut;
+                continue;
+            }
+
+            if (d.Pattern is null || d.Pattern.Count == 0) continue;
+
+            if (!YMatch(d.Pattern, inputTokens, out var captures)) continue;
+
+            // PRE + LINK (R5)
+            if (!string.IsNullOrWhiteSpace(d.Link))
+            {
+                var virtualInput = inputTokens;
+                if (!string.IsNullOrWhiteSpace(d.Pre))
+                {
+                    var preLine = AssembleOne(d.Pre!, captures);
+                    virtualInput = Tokenize(preLine);
+                }
+                var linkOut = FollowLink(d.Link!, virtualInput);
+                if (linkOut is not null) return linkOut;
+                continue;
+            }
+
+            if (d.Reassembly is null || d.Reassembly.Count == 0) continue;
+
+            // Round-robin reassembly choice
+            int rot = 0;
+            var key = (kw.Keyword, di);
+            if (_reasmRotation.TryGetValue(key, out var last)) rot = last;
+            var re = d.Reassembly[rot % d.Reassembly.Count];
+            _reasmRotation[key] = (rot + 1) % d.Reassembly.Count;
+
+            // NEW: handle special reassembly directives
+            if (string.Equals(re, "NEWKEY", StringComparison.Ordinal))
+            {
+                // Do not print; let caller move on to fallback.
+                return null;
+            }
+            if (re.Length > 1 && re[0] == '=')
+            {
+                var linkKw = re.Substring(1);
+                var linkOut = FollowLink(linkKw, inputTokens);
+                if (linkOut is not null) return linkOut;
+                continue;
+            }
+
+            var outLine = AssembleOne(re, captures);
+            return outLine;
         }
 
-        return false;
+        return null;
     }
 
-    /// <summary>
-    /// Emits a NONE fallback reply, cycling through the script’s list.
-    /// </summary>
-    private string EmitNone()
+    private string? FollowLink(string linkKeyword, List<string> inputTokens)
     {
-        if (_script.None == null || _script.None.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        int idx = _noneCursor % _script.None.Count;
-        _noneCursor++;
-
-        // Render through the same pipeline for consistency.
-        return TemplateRenderer.Render(
-            _script.None[idx],
-            captures: new List<string> { string.Empty },
-            postMap: _subs.PostMap,
-            applyPost: true,
-            sentenceCase: SentenceCase,
-            ensureTerminalPunctuation: EnsureTerminalPunctuation);
+        if (!_kwByWord.TryGetValue(linkKeyword, out var target))
+            return null;
+        return TryDecompositions(target, inputTokens);
     }
 
-    /// <summary>
-    /// Resolves a keyword by its key (case-insensitive).
-    /// </summary>
-    private bool TryGetKeyword(string key, out Keyword kw) =>
-        _byKey.TryGetValue(key, out kw!);
+    // ----- YMATCH (wildcard "0" + literals + set/tag) -----
+    private bool YMatch(List<PatternToken> pattern, List<string> input, out List<string> caps)
+    {
+        var captures = new List<string>();
+
+        bool ok = MatchFrom(0, 0);
+        caps = captures;
+        return ok;
+
+        bool MatchFrom(int startInput, int startPat)
+        {
+            if (startPat == pattern.Count)
+            {
+                return true;
+            }
+
+            var tok = pattern[startPat];
+
+            // wildcard "0" -> capture 0 or more tokens
+            if (tok is StringToken st && st.Text == "0")
+            {
+                for (int len = input.Count - startInput; len >= 0; len--)
+                {
+                    var span = Join(input, startInput, len);
+                    captures.Add(span);
+                    if (MatchFrom(startInput + len, startPat + 1)) return true;
+                    captures.RemoveAt(captures.Count - 1);
+                }
+                return false;
+            }
+
+            // literal token
+            if (tok is StringToken st2)
+            {
+                if (startInput >= input.Count) return false;
+                if (!StringEquals(st2.Text, input[startInput])) return false;
+                captures.Add(input[startInput]);
+                var okInner = MatchFrom(startInput + 1, startPat + 1);
+                if (!okInner) captures.RemoveAt(captures.Count - 1);
+                return okInner;
+            }
+
+            // set token
+            if (tok is SetToken setTok)
+            {
+                if (startInput >= input.Count) return false;
+                if (!setTok.Items.Contains(input[startInput])) return false;
+                captures.Add(input[startInput]);
+                var okInner = MatchFrom(startInput + 1, startPat + 1);
+                if (!okInner) captures.RemoveAt(captures.Count - 1);
+                return okInner;
+            }
+
+            // tag token
+            if (tok is TagToken tagTok)
+            {
+                if (startInput >= input.Count) return false;
+                bool match = false;
+                foreach (var tag in tagTok.Tags)
+                {
+                    if (_tagMap.TryGetValue(tag, out var set) && set.Contains(input[startInput]))
+                    {
+                        match = true; break;
+                    }
+                }
+                if (!match) return false;
+                captures.Add(input[startInput]);
+                var okInner = MatchFrom(startInput + 1, startPat + 1);
+                if (!okInner) captures.RemoveAt(captures.Count - 1);
+                return okInner;
+            }
+
+            return false;
+        }
+    }
+
+    // ----- ASSMBL -----
+    private static string AssembleOne(string reassembly, List<string> caps)
+    {
+        // Replace stand-alone digits 1..9 with capture 1-based indexing
+        var res = Regex.Replace(reassembly, @"\b([0-9])\b", m =>
+        {
+            int idx = m.Groups[1].Value[0] - '0';
+            int capIndex = idx - 1;
+            if (capIndex >= 0 && capIndex < caps.Count)
+                return caps[capIndex];
+            return m.Value;
+        });
+
+        // Tidy whitespace before punctuation
+        res = Regex.Replace(res, @"\s+([,.!?])", "$1");
+        res = Regex.Replace(res, @"\s{2,}", " ").Trim();
+        return res;
+    }
+
+    private string? AssembleFromRuleIfMatch(MemoryRule rule, List<string> inputTokens)
+    {
+        if (!YMatch(rule.Pattern, inputTokens, out var caps))
+            return null;
+        return AssembleOne(rule.Reassembly, caps);
+    }
+
+    private string NoneFallback()
+    {
+        if (_script.None.Count == 0) return _noMatch[(_limit - 1) % _noMatch.Length];
+        var s = _script.None[_noneIndex % _script.None.Count];
+        _noneIndex++;
+        return s;
+    }
+
+    private static List<string> Tokenize(string text)
+    {
+        var s = text.ToUpperInvariant();
+        s = s.Replace(".", " . ").Replace(",", " , ");
+        var raw = s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        var tokens = new List<string>(raw.Length);
+        foreach (var t in raw)
+        {
+            var tt = t.Trim();
+            if (tt.Length == 0) continue;
+            tokens.Add(tt);
+        }
+        return tokens;
+    }
+
+    private static string Join(List<string> tokens, int start, int len)
+    {
+        if (len <= 0) return string.Empty;
+        var sb = new StringBuilder();
+        for (int k = 0; k < len; k++)
+        {
+            if (k > 0) sb.Append(' ');
+            sb.Append(tokens[start + k]);
+        }
+        return sb.ToString();
+    }
+
+    private static bool StringEquals(string a, string b)
+        => string.Equals(a, b, StringComparison.Ordinal);
 }

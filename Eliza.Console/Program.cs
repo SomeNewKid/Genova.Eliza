@@ -15,7 +15,7 @@ internal class Program
     [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Convention of the Main method.")]
     static void Main(string[] args)
     {
-        ElizaEngine engine = new (enableMemory: true, sentenceCase: true, ensureTerminalPunctuation: true);
+        Eliza engine = new ();
 
         // Initial greeting.
         string greeting = engine.Greeting;

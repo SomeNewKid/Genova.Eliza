@@ -9,7 +9,7 @@ namespace Genova.Eliza.QualityTests;
 public class CodeQuality_Tests : CodeQuality_Base
 {
     public CodeQuality_Tests()
-        : base(typeof(Models.DoctorScript).Assembly, "Genova.Eliza")
+        : base(typeof(Eliza).Assembly, "Genova.Eliza")
     {
     }
 }
