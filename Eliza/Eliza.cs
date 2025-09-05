@@ -6,12 +6,12 @@ using Genova.Common.Attributes;
 namespace Genova.Eliza;
 
 /// <summary>
-/// Orchestrates a full ELIZA turn using a loaded DoctorScript.
+/// Orchestrates a full ELIZA turn using a loaded <see cref="DoctorScript"/>.
 /// </summary>
 [CodeQuality(Public = true, Justification = "Intended for use by the RustyKane.com website.")]
 public sealed class Eliza
 {
-    private readonly ElizaTyped _script;
+    private readonly DoctorScript _script;
     private readonly ElizaEngine _engine;
 
     /// <summary>
@@ -19,8 +19,7 @@ public sealed class Eliza
     /// </summary>
     public Eliza()
     {
-        _script = ElizaTyped.Load("DOCTOR.json");
-        _script.Validate();
+        _script = DoctorScript.Load();
         _engine = new ElizaEngine(_script);
     }
 
