@@ -48,13 +48,13 @@ internal class Program
 
         Eliza eliza = new();
 
-        Woody woody = new(configuration, openAiApiGateway);
+        Felix felix = new(configuration, openAiApiGateway);
 
         int turns = 12; // Set desired number of turns
-        await StartChat(eliza, woody, turns, fullPath);
+        await StartChat(eliza, felix, turns, fullPath);
     }
 
-    private static async Task StartChat(Eliza eliza, Woody woody, int turns, string fullPath)
+    private static async Task StartChat(Eliza eliza, Felix felix, int turns, string fullPath)
     {
         var transcript = new List<string>();
 
@@ -70,14 +70,14 @@ internal class Program
 
         for (int i = 0; i < turns; i++)
         {
-            // Woody replies to Eliza, using the full transcript
-            string woodyReply = await woody.Reply(transcript);
-            string woodyLine = $"WOODY: {woodyReply}";
-            transcript.Add(woodyLine);
-            Console.WriteLine(woodyLine);
+            // Felix replies to Eliza, using the full transcript
+            string felixReply = await felix.Reply(transcript);
+            string felixLine = $"FELIX: {felixReply}";
+            transcript.Add(felixLine);
+            Console.WriteLine(felixLine);
 
-            // Eliza replies to Woody, using only Woody's last reply
-            elizaReply = eliza.Reply(woodyReply);
+            // Eliza replies to Felix, using only Felix's last reply
+            elizaReply = eliza.Reply(felixReply);
             elizaLine = $"ELIZA: {elizaReply}";
             transcript.Add(elizaLine);
             Console.WriteLine(elizaLine);

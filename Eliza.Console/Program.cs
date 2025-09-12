@@ -5,6 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Genova.Eliza.Console;
 
+/// <summary>
+/// Use the Windows Console as the user interface for the ELIZA chatbot.
+/// </summary>
 internal class Program
 {
     /// <summary>

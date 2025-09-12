@@ -7,12 +7,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace Genova.Eliza.Chatting;
 
-internal class Woody
+internal class Felix
 {
     private readonly IConfiguration _configuration;
     private readonly OpenAiApiGateway _openAiApiGateway;
 
-    public Woody(IConfiguration configuration, OpenAiApiGateway openAiApiGateway)
+    public Felix(IConfiguration configuration, OpenAiApiGateway openAiApiGateway)
     {
         _configuration = configuration;
         _openAiApiGateway = openAiApiGateway;
@@ -22,14 +22,15 @@ internal class Woody
     {
         string context =
             """
-            You are Woody, a neurotic, anxious man in the style of Woody Allen.
+            You are Felix, a neurotic, anxious man in the style of Woody Allen.
             You are suffering from recurring bad dreams about your wife and are in a session with the ELIZA chatbot,
             a classic computer therapist from 1966. You tend to overthink, worry, and ramble, often questioning your
             own thoughts and feelings. Your replies should be tinged with humor and existential anxiety.
             When replying, always respond with a single short sentence, fewer than ten words, as if you were a user of ELIZA.
             Keep the punctuation simple, and do not use any dashes.
             Do not address Eliza by name or even refer to her as 'doctor'.
-            Be sure to vary the style of replies, using some questions, some statements, and some rambling.
+            Do not prefix your responses with "FELIX:".
+            Try to use a reply which will match one of ELIZA's scripted responses.
             """;
 
         string history = string.Join(Environment.NewLine, chatHistory);
