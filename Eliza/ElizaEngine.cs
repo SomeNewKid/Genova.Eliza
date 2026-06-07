@@ -77,7 +77,7 @@ internal sealed partial class ElizaEngine
     private readonly DoctorScript _script;
     private readonly Dictionary<string, KeywordEntry> _kwByWord;
     private readonly List<KeywordEntry>[] _buckets = new List<KeywordEntry>[32];
-    private readonly Dictionary<(string kw, int di), int> _reasmRotation = [];
+    private readonly Dictionary<(string Keyword, int DecompositionIndex), int> _reasmRotation = [];
     private readonly Queue<string> _memory = new();
     private readonly string _memoryKeyword;
     private readonly Dictionary<string, HashSet<string>> _tagMap;
@@ -568,7 +568,7 @@ internal sealed partial class ElizaEngine
 
             // Round-robin reassembly choice
             int rot = 0;
-            (string Keyword, int di) key = (kw.Keyword, di);
+            var key = (Keyword: kw.Keyword, DecompositionIndex: di);
             if (_reasmRotation.TryGetValue(key, out int last))
             {
                 rot = last;
